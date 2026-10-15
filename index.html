@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<title>Control de Alérgenos Pro - Carta 2026</title>
+<style>
+  :root {
+    --bg: #0f172a; --card: #1e293b; --card-alt: #020617; --text: #f8fafc; --muted: #94a3b8;
+    --green: #10b981; --amber: #f59e0b; --red: #ef4444; --accent: #38bdf8; --purple: #a855f7; --border: #334155;
+  }
+  * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: var(--bg); color: var(--text); padding-bottom: 90px; }
+  
+  header { background: var(--card-alt); padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--border); user-select: none; }
+  h1 { margin: 0; font-size: 1rem; letter-spacing: 0.5px; cursor: pointer; }
+  .reset-filters { background: transparent; color: var(--accent); border: 1px solid var(--border); padding: 6px 10px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+
+  .staff-bar { display: none; background: #172554; border-bottom: 2px solid var(--amber); padding: 10px 14px; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; position: sticky; top: 49px; z-index: 29; }
+  .staff-bar.show { display: flex; }
+  
+  .container { padding: 14px; max-width: 740px; margin: auto; }
+  .section-title { font-size: 0.76rem; text-transform: uppercase; color: var(--muted); margin: 12px 0 7px; font-weight: 800; letter-spacing: 0.5px; }
+  
+  .allergen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(98px, 1fr)); gap: 6px; }
+  .diet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); gap: 6px; margin-top: 6px; }
+  
+  .chip { background: var(--card); border: 1.5px solid var(--border); color: var(--text); padding: 9px 5px; border-radius: 10px; font-size: 0.73rem; font-weight: 700; text-align: center; cursor: pointer; user-select: none; transition: 0.12s; }
+  .chip.active { background: rgba(239, 68, 68, 0.22); border-color: var(--red); color: #fca5a5; }
+  .chip.diet.active { background: rgba(168, 85, 247, 0.22); border-color: var(--purple); color: #e9d5ff; }
+
+  .controls-bar { display: flex; gap: 8px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
+  .search-input { flex: 1; min-width: 150px; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: #fff; font-size: 0.86rem; }
+  .cat-filter { padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: #fff; font-size: 0.84rem; }
+  
+  .action-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .trace-toggle { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--muted); cursor: pointer; }
+  .share-btns { display: flex; gap: 6px; }
+
+  .tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .tab { padding: 10px 4px; border-radius: 10px; text-align: center; font-weight: 800; font-size: 0.78rem; cursor: pointer; border: 2px solid transparent; background: var(--card); color: var(--muted); }
+  .tab.aptos.active { border-color: var(--green); color: var(--green); background: rgba(16, 185, 129, 0.12); }
+  .tab.mod.active { border-color: var(--amber); color: var(--amber); background: rgba(245, 158, 11, 0.12); }
+  .tab.proh.active { border-color: var(--red); color: var(--red); background: rgba(239, 68, 68, 0.12); }
+
+  .dish-card { background: var(--card); border-radius: 12px; padding: 14px; margin-bottom: 12px; border-left: 5px solid #475569; }
+  .dish-card.aptos { border-left-color: var(--green); }
+  .dish-card.mod { border-left-color: var(--amber); }
+  .dish-card.proh { border-left-color: var(--red); }
+  .dish-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .dish-name { font-weight: 800; font-size: 0.95rem; margin: 0; line-height: 1.3; }
+  .dish-cat { font-size: 0.68rem; background: var(--card-alt); color: var(--accent); padding: 3px 7px; border-radius: 6px; font-weight: 700; white-space: nowrap; }
+
+  .mod-box { margin-top: 8px; padding: 8px 10px; border-radius: 8px; font-size: 0.79rem; font-weight: 600; line-height: 1.35; }
+  .mod-box.warn { background: rgba(245, 158, 11, 0.16); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+  .mod-box.danger { background: rgba(239, 68, 68, 0.16); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+  .mod-box.trace { background: rgba(56, 189, 248, 0.12); color: #7dd3fc; margin-top: 6px; }
+  .mod-box.protocol { background: rgba(168, 85, 247, 0.15); color: #e9d5ff; border: 1px solid rgba(168, 85, 247, 0.35); margin-top: 6px; }
+
+  .ing-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .ing-pill { font-size: 0.74rem; padding: 5px 8px; border-radius: 6px; background: #0f172a; color: #cbd5e1; border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .ing-pill.is-mod { border-color: rgba(245, 158, 11, 0.5); }
+  .ing-pill .al-tag { color: var(--accent); font-weight: 700; font-size: 0.68rem; }
+  .ing-pill .base-badge { background: #1e3a8a; color: #93c5fd; font-size: 0.63rem; padding: 1px 4px; border-radius: 4px; font-weight: 700; }
+  
+  .staff-quick-toggle { cursor: pointer; padding: 2px 5px; border-radius: 4px; font-weight: 700; font-size: 0.67rem; margin-left: 3px; }
+  .staff-quick-toggle.mod-on { background: var(--amber); color: #000; }
+  .staff-quick-toggle.mod-off { background: #475569; color: #fff; }
+
+  /* MODALS */
+  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.88); z-index: 50; overflow-y: auto; padding: 12px; }
+  .modal-content { background: var(--card); max-width: 680px; margin: 10px auto 40px; padding: 16px; border-radius: 14px; border: 1px solid var(--border); }
+  .form-group { margin-bottom: 10px; }
+  .form-group label { display: block; font-size: 0.76rem; color: var(--muted); margin-bottom: 4px; font-weight: 700; }
+  .form-group input, .form-group select { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 0.85rem; }
+  
+  .ing-editor-card { background: #0f172a; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border); }
+  .mini-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .mini-chip { font-size: 0.66rem; padding: 4px 7px; border-radius: 5px; background: var(--card); border: 1px solid #475569; color: var(--muted); cursor: pointer; font-weight: 700; user-select: none; }
+  .mini-chip.selected { background: var(--red); color: #fff; border-color: var(--red); }
+  .mini-chip.diet-sel { background: var(--purple); color: #fff; border-color: var(--purple); }
+  .mini-chip.trace-sel { background: var(--accent); color: #000; border-color: var(--accent); }
+
+  .btn { padding: 8px 11px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; font-size: 0.78rem; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+  .btn-primary { background: var(--accent); color: #020617; }
+  .btn-green { background: var(--green); color: #020617; }
+  .btn-amber { background: var(--amber); color: #000; }
+  .btn-purple { background: var(--purple); color: #fff; }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-outline { background: transparent; border: 1px solid #64748b; color: var(--text); }
+
+  @media print {
+    header, .staff-bar, .controls-bar, .action-row, .allergen-grid, .diet-grid, .section-title, .ing-pills { display: none !important; }
+    body { background: #fff; color: #000; padding: 0; }
+    .dish-card { border: 1px solid #ccc; background: #fff; color: #000; page-break-inside: avoid; }
+    .mod-box { border: 1px solid #000; color: #000 !important; background: #f1f5f9 !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 onclick="handleSecretTap()" title="Toca 5 veces para modo Staff">🍣 CONTROL ALÉRGENOS 2026</h1>
+  <button class="reset-filters" onclick="clearAllFilters()">Limpiar filtros</button>
+</header>
+
+<!-- BARRA PRIVADA STAFF (OCULTA HASTA TOCAR 5 VECES EL TÍTULO) -->
+<div class="staff-bar" id="staffBar">
+  <div style="font-size:0.76rem; font-weight:700; color:#fde047; width:100%;">
+    🔓 MODO STAFF ACTIVO: Toca cualquier ingrediente para alternar entre Fijo (🔒) y Adaptable (🔄)
+  </div>
+  <div style="display:flex; gap:6px; flex-wrap:wrap; width:100%;">
+    <button class="btn btn-amber" onclick="openDishModal()">+ Plato / Sugerencia</button>
+    <button class="btn btn-purple" onclick="openBasesModal()">🧪 Salsas y Bases</button>
+    <button class="btn btn-outline" onclick="exportData()">📤 Copiar</button>
+    <button class="btn btn-outline" onclick="importData()">📥 Pegar</button>
+    <button class="btn btn-outline" onclick="changePin()">🔑 PIN</button>
+    <button class="btn btn-danger" onclick="resetDefault()">↺ Fábrica</button>
+    <button class="btn btn-primary" style="margin-left:auto;" onclick="lockStaffMode()">🔒 Salir Staff</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="section-title">1. Alérgenos a evitar:</div>
+  <div class="allergen-grid" id="allergenGrid"></div>
+
+  <div class="section-title">2. Filtros dietéticos y estilo de vida:</div>
+  <div class="diet-grid" id="dietGrid"></div>
+
+  <div class="controls-bar">
+    <input type="text" id="searchInput" class="search-input" placeholder="Buscar plato o ingrediente..." oninput="renderDishes()">
+    <select id="catFilter" class="cat-filter" onchange="renderDishes()">
+      <option value="ALL">Todas las categorías</option>
+      <option value="SUGERENCIAS">⭐ Sugerencias</option>
+      <option value="MAKIS">Makis</option>
+      <option value="URAMAKIS">Uramakis</option>
+      <option value="NIGIRIS">Nigiris</option>
+      <option value="TEMARIS">Temaris</option>
+      <option value="COMPARTIR">Compartir</option>
+      <option value="WOK">Wok</option>
+      <option value="POSTRES">Postres</option>
+    </select>
+  </div>
+
+  <div class="action-row">
+    <label class="trace-toggle">
+      <input type="checkbox" id="strictTraces" onchange="renderDishes()">
+      Bloquear también por trazas
+    </label>
+    <div class="share-btns">
+      <button class="btn btn-green" onclick="shareWhatsApp()">📲 WhatsApp</button>
+      <button class="btn btn-outline" onclick="window.print()">🖨️ Imprimir</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab aptos active" id="tab-aptos" onclick="setTab('aptos')">APTOS (0)</div>
+    <div class="tab mod" id="tab-mod" onclick="setTab('mod')">ADAPTABLES (0)</div>
+    <div class="tab proh" id="tab-proh" onclick="setTab('proh')">PROHIBIDOS (0)</div>
+  </div>
+
+  <div id="dishList"></div>
+</div>
+
+<!-- MODAL 1: EDITOR DE PLATO -->
+<div class="modal" id="dishModal">
+  <div class="modal-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <h2 style="margin:0; font-size:1rem;" id="modalTitle">✏️ Editar Plato</h2>
+      <button class="btn btn-outline" onclick="closeDishModal()">✕ Cerrar</button>
+    </div>
+
+    <input type="hidden" id="editId">
+    <div style="display:grid; grid-template-columns: 1fr 135px; gap:8px;">
+      <div class="form-group">
+        <label>Nombre del Plato:</label>
+        <input type="text" id="editName">
+      </div>
+      <div class="form-group">
+        <label>Categoría:</label>
+        <select id="editCat">
+          <option value="SUGERENCIAS">⭐ SUGERENCIAS</option>
+          <option value="MAKIS">MAKIS</option>
+          <option value="URAMAKIS">URAMAKIS</option>
+          <option value="NIGIRIS">NIGIRIS</option>
+          <option value="TEMARIS">TEMARIS</option>
+          <option value="COMPARTIR">COMPARTIR</option>
+          <option value="WOK">WOK</option>
+          <option value="POSTRES">POSTRES</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>👩‍🍳 Protocolo de cocina / contaminación cruzada (ej. Freidora limpia, cambio de tabla):</label>
+      <input type="text" id="editProtocol" placeholder="Ej. Freír en cazo limpio sin gluten / Cambiar cuchillo">
+    </div>
+
+    <div class="form-group">
+      <label>Trazas generales del plato:</label>
+      <div class="mini-chips" id="editTracesChips"></div>
+    </div>
+
+    <hr style="border-color:var(--border); margin:12px 0;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <span class="section-title" style="margin:0;">Ingredientes del plato:</span>
+      <button class="btn btn-primary" onclick="addIngredientCard()">+ Añadir Ingrediente</button>
+    </div>
+
+    <div id="ingredientsEditor"></div>
+
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button class="btn btn-primary" style="flex:1; padding:12px;" onclick="saveDishFromModal()">💾 Guardar Plato</button>
+      <button class="btn btn-danger" id="deleteDishBtn" onclick="deleteCurrentDish()">🗑️ Borrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 2: GESTOR CENTRALIZADO DE SALSAS Y BASES (CASCADA) -->
+<div class="modal" id="basesModal">
+  <div class="modal-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h2 style="margin:0; font-size:1rem;">🧪 Salsas y Bases Compartidas</h2>
+      <button class="btn btn-outline" onclick="closeBasesModal()">✕ Cerrar</button>
+    </div>
+    <p style="font-size:0.76rem; color:var(--muted); margin-top:0;">
+      Cualquier cambio que hagas aquí actualizará automáticamente todos los platos de la carta que utilicen esa salsa o base.
+    </p>
+    <div id="basesEditorList"></div>
+    <button class="btn btn-outline" style="width:100%; margin-bottom:12px;" onclick="addBaseCard()">+ Crear Nueva Salsa / Base Compartida</button>
+    <button class="btn btn-primary" style="width:100%; padding:12px;" onclick="saveBasesFromModal()">💾 Guardar Salsas y Actualizar Carta</button>
+  </div>
+</div>
+
+<script>
+const ALLERGENS = [
+  "GLUTEN", "CRUSTÁCEOS", "HUEVO", "PESCADO", "CACAHUETES", 
+  "SOJA", "LÁCTEO", "FRUTOS CON CÁSCARA", "APIO", "MOSTAZA", 
+  "SÉSAMO", "SULFITOS", "MOLUSCOS"
+];
+
+const DIETS = [
+  { id: "CRUDO_EMBARAZO", label: "🤰 Embarazada" },
+  { id: "NO_VEGANO", label: "🌱 Vegano" },
+  { id: "NO_VEGETARIANO", label: "🥚 Vegetariano" },
+  { id: "CERDO", label: "🚫🐷 Sin Cerdo" },
+  { id: "PICANTE", label: "🌶️ Sin Picante" }
+];
+
+// 1. BASE DE DATOS DE SALSAS Y BASES VINCULADAS
+const INITIAL_BASES = {
+  "base_queso_crema": { name: "Queso crema pasteurizado", a: ["LÁCTEO"], tags: ["NO_VEGANO"] },
+  "base_kimchi": { name: "Kimchi / Kimchi de ñora", a: ["PESCADO", "SOJA"], tags: ["NO_VEGANO", "NO_VEGETARIANO", "PICANTE"] },
+  "base_salsa_kimuchi": { name: "Salsa kimuchi", a: ["PESCADO", "SOJA", "HUEVO"], tags: ["NO_VEGANO", "NO_VEGETARIANO", "PICANTE"] },
+  "base_yakiniku": { name: "Salsa Yakiniku", a: ["GLUTEN", "SOJA", "SÉSAMO"], tags: [] },
+  "base_pan_bao": { name: "Pan Bao", a: ["GLUTEN", "HUEVO", "SÉSAMO", "LÁCTEO", "FRUTOS CON CÁSCARA", "CACAHUETES", "SOJA"], tags: ["NO_VEGANO"] },
+  "base_tobiko": { name: "Tobiko rojo", a: ["PESCADO", "SOJA"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"] },
+  "base_mayo_japonesa": { name: "Mayonesa japonesa", a: ["HUEVO", "SOJA"], tags: ["NO_VEGANO"] },
+  "base_alioli": { name: "Salsa Alioli", a: ["SOJA", "HUEVO"], tags: ["NO_VEGANO"] },
+  "base_tonkatsu": { name: "Salsa Tonkatsu", a: ["GLUTEN", "SOJA"], tags: [] }
+};
+
+// 2. LOS 43 PLATOS CON INGREDIENTES VINCULADOS, ETIQUETAS DIETÉTICAS Y PROTOCOLOS
+const INITIAL_MENU = [
+  // MAKIS
+  { id: 1, cat: "MAKIS", name: "VEGANO", traces: [], protocol: "Esterilla y tabla limpias.", ings: [
+    { n: "Alga nori, arroz sushi, pepino, aguacate, zanahoria", a: [], tags: [], mod: false, note: "" },
+    { n: "Rábano encurtido", a: ["SULFITOS"], tags: [], mod: true, note: "Sin rábano encurtido" },
+    { n: "Emulsión piparra", a: ["SOJA", "HUEVO"], tags: ["NO_VEGANO", "PICANTE"], mod: true, note: "Sin emulsión de piparra" }
+  ]},
+  { id: 2, cat: "MAKIS", name: "PHILADELPHIA", traces: [], protocol: "Queso crema pasteurizado (apto embarazo si se omite salmón).", ings: [
+    { n: "Alga nori, arroz sushi y aguacate", a: [], tags: [], mod: false, note: "" },
+    { n: "Salmón crudo", a: ["PESCADO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Queso crema pasteurizado", baseId: "base_queso_crema", a: [], tags: [], mod: true, note: "Sin queso crema" }
+  ]},
+  { id: 3, cat: "MAKIS", name: "APPLE UNAGI TEMPURIZADO", traces: ["CRUSTÁCEOS", "MOLUSCOS", "HUEVO"], protocol: "Anguila cocinada; contiene trazas de freidora si se tempuriza.", ings: [
+    { n: "Alga nori, arroz sushi y manzana osmotizada", a: [], tags: [], mod: false, note: "" },
+    { n: "Anguila", a: ["GLUTEN", "PESCADO", "SOJA"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Salsa kabayaki (contiene mirin/sake/dashi)", a: ["GLUTEN", "PESCADO", "SOJA"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin salsa kabayaki" },
+    { n: "Queso crema pasteurizado", baseId: "base_queso_crema", a: [], tags: [], mod: true, note: "Sin queso crema" },
+    { n: "Rollo tempurizado", a: ["GLUTEN"], tags: [], mod: true, note: "Servir sin tempurizar" }
+  ]},
+  { id: 4, cat: "MAKIS", name: "TIGER 2.0 TEMPURIZADO", traces: [], protocol: "Precaución alérgenos en aceite de tempura.", ings: [
+    { n: "Alga nori, arroz sushi y aguacate", a: [], tags: [], mod: false, note: "" },
+    { n: "Gambón", a: ["CRUSTÁCEOS", "MOLUSCOS"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Salmón", a: ["PESCADO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin salmón" },
+    { n: "Queso crema pasteurizado", baseId: "base_queso_crema", a: [], tags: [], mod: true, note: "Sin queso crema" },
+    { n: "Mayonesa japonesa", baseId: "base_mayo_japonesa", a: [], tags: [], mod: true, note: "Sin mayonesa japonesa" },
+    { n: "Tobiko rojo", baseId: "base_tobiko", a: [], tags: [], mod: true, note: "Sin tobiko" },
+    { n: "Rollo tempurizado", a: ["GLUTEN"], tags: [], mod: true, note: "Servir sin tempurizar" }
+  ]},
+  // URAMAKIS
+  { id: 5, cat: "URAMAKIS", name: "MANDUKA ORIGINAL", traces: [], protocol: "Se puede montar con atún natural sin marinado kimchi si hay alergia a soja.", ings: [
+    { n: "Alga nori, arroz, pepino, cebollino, espárrago", a: [], tags: [], mod: false, note: "" },
+    { n: "Atún crudo", a: ["PESCADO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Marinado kimchi del atún", baseId: "base_kimchi", a: [], tags: [], mod: true, note: "Usar atún limpio sin marinar en kimchi" },
+    { n: "Sésamo negro", a: ["SÉSAMO"], tags: [], mod: true, note: "Sin sésamo negro" },
+    { n: "Tobiko rojo", baseId: "base_tobiko", a: [], tags: [], mod: true, note: "Sin tobiko" },
+    { n: "Salsa kimuchi", baseId: "base_salsa_kimuchi", a: [], tags: [], mod: true, note: "Sin salsa kimuchi" }
+  ]},
+  { id: 6, cat: "URAMAKIS", name: "MOSQUITO 2.0", traces: ["MOLUSCOS"], protocol: "Langostino frito en panko (cocinado).", ings: [
+    { n: "Alga nori, arroz, aguacate, albahaca, tomate seco", a: [], tags: [], mod: false, note: "" },
+    { n: "Langostino panko", a: ["GLUTEN", "CRUSTÁCEOS", "SOJA"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Queso crema pasteurizado", baseId: "base_queso_crema", a: [], tags: [], mod: true, note: "Sin queso crema" },
+    { n: "Pesto genovese verde", a: ["PESCADO", "CACAHUETES", "FRUTOS CON CÁSCARA", "APIO", "SÉSAMO", "HUEVO", "LÁCTEO"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin pesto genovese" }
+  ]},
+  { id: 7, cat: "URAMAKIS", name: "HORA DEL VERMOUTH", traces: [], protocol: "El gel de vermouth contiene alcohol, lactosa y proteína de leche.", ings: [
+    { n: "Alga nori, arroz, aguacate, tallos alcaparra", a: [], tags: [], mod: false, note: "" },
+    { n: "Bonito en salazón", a: ["PESCADO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Gel de vermouth", a: ["SULFITOS", "LÁCTEO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO"], mod: true, note: "Sin gel de vermouth" },
+    { n: "Polvo remolacha", a: ["APIO"], tags: [], mod: true, note: "Sin polvo de remolacha" }
+  ]},
+  { id: 8, cat: "URAMAKIS", name: "ATÚN CANARIO", traces: [], protocol: "Cuidado con trazas de frutos secos en el polvo de plátano.", ings: [
+    { n: "Alga nori, arroz y plátano osmotizado", a: [], tags: [], mod: false, note: "" },
+    { n: "Atún crudo", a: ["PESCADO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Queso crema almogrote", a: ["LÁCTEO"], tags: ["NO_VEGANO", "PICANTE"], mod: true, note: "Sin queso almogrote" },
+    { n: "Polvo plátano frito", a: ["GLUTEN", "CACAHUETES", "FRUTOS CON CÁSCARA", "SOJA", "LÁCTEO", "SÉSAMO"], tags: ["NO_VEGANO"], mod: true, note: "Sin polvo de plátano frito" }
+  ]},
+  { id: 9, cat: "URAMAKIS", name: "RED MANGO", traces: [], protocol: "Se puede hacer con salmón natural sin sriracha para evitar picante.", ings: [
+    { n: "Alga nori, arroz y mango", a: [], tags: [], mod: false, note: "" },
+    { n: "Salmón crudo", a: ["PESCADO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Marinado sriracha del salmón", a: [], tags: ["PICANTE"], mod: true, note: "Usar salmón natural sin sriracha" },
+    { n: "Queso crema pasteurizado", baseId: "base_queso_crema", a: [], tags: [], mod: true, note: "Sin queso crema" },
+    { n: "Sichimi tougarashi y filamentos guindilla", a: ["SÉSAMO"], tags: ["PICANTE"], mod: true, note: "Sin sichimi ni guindilla" }
+  ]},
+  // NIGIRIS
+  { id: 10, cat: "NIGIRIS", name: "SALMÓN con reducción de sidra El Gaitero", traces: [], protocol: "Pescado crudo.", ings: [
+    { n: "Arroz de sushi", a: [], tags: [], mod: false, note: "" },
+    { n: "Salmón", a: ["PESCADO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Reducción de sidra El Gaitero", a: ["SULFITOS"], tags: [], mod: true, note: "Sin reducción de sidra" }
+  ]},
+  { id: 11, cat: "NIGIRIS", name: "SALMÓN FLAMBEADO CON KIMCHI DE ÑORA", traces: [], protocol: "Aunque se flambea exteriormente, el interior del salmón queda semicrudo.", ings: [
+    { n: "Arroz de sushi", a: [], tags: [], mod: false, note: "" },
+    { n: "Salmón flambeado", a: ["PESCADO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Kimchi de ñora", baseId: "base_kimchi", a: [], tags: [], mod: true, note: "Sin kimchi de ñora" }
+  ]},
+  { id: 12, cat: "NIGIRIS", name: "PEZ MANTEQUILLA con pesto de tomate seco", traces: [], protocol: "Pescado crudo.", ings: [
+    { n: "Arroz de sushi", a: [], tags: [], mod: false, note: "" },
+    { n: "Pez mantequilla", a: ["PESCADO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Pesto de tomate seco", a: ["LÁCTEO"], tags: ["NO_VEGANO"], mod: true, note: "Sin pesto de tomate seco" }
+  ]},
+  { id: 13, cat: "NIGIRIS", name: "PEZ MANTEQUILLA FLAMBEADO (ajo negro y alcaparra)", traces: [], protocol: "Interior semicrudo.", ings: [
+    { n: "Arroz de sushi y polvo alcaparra frita", a: [], tags: [], mod: false, note: "" },
+    { n: "Pez mantequilla flambeado", a: ["PESCADO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Emulsión ajo negro", a: ["SOJA", "HUEVO"], tags: ["NO_VEGANO"], mod: true, note: "Sin emulsión de ajo negro" }
+  ]},
+  { id: 14, cat: "NIGIRIS", name: "ATÚN (Cádiz)", traces: [], protocol: "Pescado crudo.", ings: [
+    { n: "Arroz de sushi", a: [], tags: [], mod: false, note: "" },
+    { n: "Atún", a: ["PESCADO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" }
+  ]},
+  { id: 15, cat: "NIGIRIS", name: "ATÚN FLAMBEADO con sobrasada mallorquina", traces: [], protocol: "La sobrasada contiene cerdo.", ings: [
+    { n: "Arroz de sushi", a: [], tags: [], mod: false, note: "" },
+    { n: "Atún flambeado", a: ["PESCADO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Queso crema pasteurizado", baseId: "base_queso_crema", a: [], tags: [], mod: true, note: "Sin queso crema" },
+    { n: "Sobrasada de cerdo", a: [], tags: ["CERDO", "CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin sobrasada" }
+  ]},
+  { id: 16, cat: "NIGIRIS", name: "PULPO FLAMBEADO al pimentón de la Vera", traces: [], protocol: "Pulpo cocido (apto embarazo).", ings: [
+    { n: "Arroz de sushi y aceite de pimentón", a: [], tags: [], mod: false, note: "" },
+    { n: "Pulpo cocido flambeado", a: ["MOLUSCOS"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" }
+  ]},
+  { id: 17, cat: "NIGIRIS", name: "GAMBA ROJA (Huelva)", traces: [], protocol: "Gamba cruda.", ings: [
+    { n: "Arroz de sushi", a: [], tags: [], mod: false, note: "" },
+    { n: "Gamba roja", a: ["CRUSTÁCEOS"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" }
+  ]},
+  // TEMARIS
+  { id: 18, cat: "TEMARIS", name: "VIEIRA FLAMBEADA con queso Idiazábal", traces: [], protocol: "El queso Idiazábal contiene lisozima de huevo.", ings: [
+    { n: "Arroz de sushi", a: [], tags: [], mod: false, note: "" },
+    { n: "Vieira", a: ["MOLUSCOS", "CRUSTÁCEOS", "PESCADO", "SULFITOS"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Queso Idiazabal", a: ["LÁCTEO", "HUEVO"], tags: ["NO_VEGANO"], mod: true, note: "Sin queso Idiazábal" }
+  ]},
+  { id: 19, cat: "TEMARIS", name: "VACA madurada con tartufo y yema curada", traces: [], protocol: "Carne madurada sin cocción y yema curada en sal/azúcar (no apto embarazadas).", ings: [
+    { n: "Arroz de sushi", a: [], tags: [], mod: false, note: "" },
+    { n: "Ternera madurada", a: [], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Pasta Tartufo (contiene anchoa y sepia)", a: ["PESCADO", "MOLUSCOS", "SOJA"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin tartufo" },
+    { n: "Yema curada", a: ["HUEVO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO"], mod: true, note: "Sin yema curada" }
+  ]},
+  // COMPARTIR
+  { id: 20, cat: "COMPARTIR", name: "EDAMAME", traces: [], protocol: "Wok/sartén limpia si hay alergia a sésamo.", ings: [
+    { n: "Vainas de soja verde y AOVE", a: ["SOJA"], tags: [], mod: false, note: "" },
+    { n: "Aceite de sésamo y sésamo negro", a: ["SÉSAMO"], tags: [], mod: true, note: "Saltear solo con AOVE sin sésamo" },
+    { n: "Filamentos de guindilla", a: [], tags: ["PICANTE"], mod: true, note: "Sin filamentos de guindilla" }
+  ]},
+  { id: 21, cat: "COMPARTIR", name: "CROQUETA MANDUKA", traces: [], protocol: "Freidora con gluten/moluscos.", ings: [
+    { n: "Masa croqueta (calamar, lácteo, panko, huevo)", a: ["MOLUSCOS", "LÁCTEO", "GLUTEN", "HUEVO"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Kimchi integrado", baseId: "base_kimchi", a: [], tags: [], mod: false, note: "" },
+    { n: "Salsa kimuchi exterior", baseId: "base_salsa_kimuchi", a: [], tags: [], mod: true, note: "Servir sin salsa kimuchi" }
+  ]},
+  { id: 22, cat: "COMPARTIR", name: "BAO PANCETA", traces: ["MOLUSCOS", "CRUSTÁCEOS", "PESCADO"], protocol: "Cocinado completo.", ings: [
+    { n: "Pan bao", baseId: "base_pan_bao", a: [], tags: [], mod: false, note: "" },
+    { n: "Panceta de cerdo y verduras", a: [], tags: ["CERDO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Salsa char siu", a: ["GLUTEN", "SOJA"], tags: ["NO_VEGANO"], mod: true, note: "Sin salsa char siu" }
+  ]},
+  { id: 23, cat: "COMPARTIR", name: "BAO DE CALAMARES", traces: ["PESCADO"], protocol: "Cocinado completo.", ings: [
+    { n: "Pan bao", baseId: "base_pan_bao", a: [], tags: [], mod: false, note: "" },
+    { n: "Calamares fritos", a: ["MOLUSCOS"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Salsa alioli", baseId: "base_alioli", a: [], tags: [], mod: true, note: "Sin salsa alioli" }
+  ]},
+  { id: 24, cat: "COMPARTIR", name: "BAO CARRILLERA", traces: [], protocol: "Cocinado completo.", ings: [
+    { n: "Pan bao", baseId: "base_pan_bao", a: [], tags: [], mod: false, note: "" },
+    { n: "Carrillera de cerdo y verdura", a: [], tags: ["CERDO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Salsa Yakiniku", baseId: "base_yakiniku", a: [], tags: [], mod: true, note: "Sin salsa yakiniku" }
+  ]},
+  { id: 25, cat: "COMPARTIR", name: "TAKOYAKI", traces: ["LÁCTEO"], protocol: "Cocinado completo.", ings: [
+    { n: "Takoyaki (masa y pulpo)", a: ["GLUTEN", "HUEVO", "SOJA", "PESCADO", "MOLUSCOS"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Salsa tonkatsu", baseId: "base_tonkatsu", a: [], tags: [], mod: true, note: "Sin salsa tonkatsu" },
+    { n: "Mayonesa", baseId: "base_mayo_japonesa", a: [], tags: [], mod: true, note: "Sin mayonesa" },
+    { n: "Bonito seco ahumado", a: ["PESCADO"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin bonito seco" }
+  ]},
+  { id: 26, cat: "COMPARTIR", name: "GYOZAS", traces: [], protocol: "Relleno de cerdo y panceta.", ings: [
+    { n: "Gyozas de cerdo", a: ["GLUTEN", "SOJA", "SÉSAMO", "HUEVO"], tags: ["CERDO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Mayonesa soja", a: ["GLUTEN", "HUEVO", "SOJA"], tags: ["NO_VEGANO"], mod: true, note: "Sin mayonesa de soja" },
+    { n: "Furikake noritamago", a: ["LÁCTEO", "SÉSAMO", "HUEVO", "PESCADO", "CRUSTÁCEOS", "SOJA"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin furikake" }
+  ]},
+  { id: 27, cat: "COMPARTIR", name: "ENSALADA WAKAME", traces: [], protocol: "Omitir salmón para embarazadas.", ings: [
+    { n: "Wakame marinado", a: ["GLUTEN", "SÉSAMO", "SOJA", "CRUSTÁCEOS", "MOSTAZA", "CACAHUETES", "PESCADO"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Salmón crudo", a: ["PESCADO"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin salmón" },
+    { n: "Mango y pepino", a: [], tags: [], mod: true, note: "Sin mango/pepino" },
+    { n: "Mix de sésamo", a: ["SÉSAMO"], tags: [], mod: true, note: "Sin sésamo" },
+    { n: "Vinagreta de soja y yuzu", a: ["SOJA"], tags: [], mod: true, note: "Sin vinagreta de soja" }
+  ]},
+  { id: 28, cat: "COMPARTIR", name: "ENSALADA DE BURRATA CON CARPACCIO DE GAMBÓN", traces: [], protocol: "Lavar bien rúcula y cherry; omitir gambón en embarazadas.", ings: [
+    { n: "Rúcula, cherry confitado, lima y aceite", a: [], tags: [], mod: false, note: "" },
+    { n: "Burrata pasteurizada", a: ["LÁCTEO"], tags: ["NO_VEGANO"], mod: true, note: "Sin burrata" },
+    { n: "Carpaccio gambón crudo", a: ["CRUSTÁCEOS", "MOLUSCOS"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin carpaccio de gambón" },
+    { n: "Rábano encurtido", a: ["SULFITOS"], tags: [], mod: true, note: "Sin rábano encurtido" },
+    { n: "Migas de tempura (Tenkasu)", a: ["GLUTEN", "CRUSTÁCEOS", "PESCADO"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin tenkasu" }
+  ]},
+  { id: 29, cat: "COMPARTIR", name: "PATATAS BRAVAS COREANAS", traces: ["MOLUSCOS", "LÁCTEO"], protocol: "⚠️ CELÍACOS: La patata declara GLUTEN por freidora compartida. Freír en aceite limpio para eliminar gluten.", ings: [
+    { n: "Patata guarnición (freidora)", a: ["GLUTEN"], tags: [], mod: true, note: "Freír patata en cazo/aceite limpio sin gluten" },
+    { n: "Sofrito tomate, ajo, cebolla", a: [], tags: [], mod: false, note: "" },
+    { n: "Kimchi", baseId: "base_kimchi", a: [], tags: [], mod: true, note: "Sin salsa kimchi" },
+    { n: "Salsa alioli", baseId: "base_alioli", a: [], tags: [], mod: true, note: "Sin alioli" },
+    { n: "Sésamo", a: ["SÉSAMO"], tags: [], mod: true, note: "Sin sésamo" }
+  ]},
+  { id: 30, cat: "COMPARTIR", name: "PANIPURI STEAK TARTAR", traces: ["CRUSTÁCEOS", "MOLUSCOS", "LÁCTEO"], protocol: "Carne de vacuno cruda.", ings: [
+    { n: "Panipuri", a: ["GLUTEN"], tags: [], mod: false, note: "" },
+    { n: "Carne de vacuno 100% cruda", a: [], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Salsa steak tartar", a: ["MOSTAZA", "SULFITOS", "SOJA", "PESCADO", "HUEVO"], tags: ["NO_VEGANO", "NO_VEGETARIANO", "PICANTE"], mod: true, note: "Aliñar carne solo con AOVE y sal" }
+  ]},
+  { id: 31, cat: "COMPARTIR", name: "TARTAR DE GAMBÓN", traces: [], protocol: "Gambón crudo.", ings: [
+    { n: "Gambón crudo", a: ["CRUSTÁCEOS", "MOLUSCOS"], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Manzana osmotizada y emulsión de manzana", a: [], tags: [], mod: false, note: "" },
+    { n: "Tobiko", baseId: "base_tobiko", a: [], tags: [], mod: true, note: "Sin tobiko" }
+  ]},
+  { id: 32, cat: "COMPARTIR", name: "TATAKI DE VACA", traces: [], protocol: "En embarazadas se puede pasar bien la carne en plancha.", ings: [
+    { n: "Ternera (marcada en plancha, interior crudo)", a: [], tags: ["CRUDO_EMBARAZO", "NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Cocinar bien pasada la ternera (si es por embarazo)" },
+    { n: "Setas shiitake y vinagre de arroz", a: [], tags: [], mod: false, note: "" },
+    { n: "Salsa Yakiniku", baseId: "base_yakiniku", a: [], tags: [], mod: true, note: "Sin salsa yakiniku" }
+  ]},
+  // WOK
+  { id: 33, cat: "WOK", name: "WOK MANDUKA", traces: [], protocol: "Limpiar wok a fondo antes de saltear alergias.", ings: [
+    { n: "Noodles de trigo", a: ["GLUTEN"], tags: [], mod: true, note: "Sustituir por noodles de arroz o arroz basmati" },
+    { n: "Verduras (cebolleta, calabacín, zanahoria, champiñón)", a: [], tags: [], mod: false, note: "" },
+    { n: "Pollo", a: [], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin pollo" },
+    { n: "Gambones", a: ["CRUSTÁCEOS", "MOLUSCOS"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin gambones" },
+    { n: "Salsa Mk", a: ["GLUTEN", "SOJA", "SÉSAMO"], tags: [], mod: true, note: "Saltear sin salsa Mk" }
+  ]},
+  { id: 34, cat: "WOK", name: "CURRY VERDE", traces: [], protocol: "La pasta de curry verde lleva anchoa e ingredientes picantes en base.", ings: [
+    { n: "Arroz basmati y verduras", a: [], tags: [], mod: false, note: "" },
+    { n: "Pollo", a: [], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Hacer solo con verduras sin pollo" },
+    { n: "Salsa curry verde (con anchoa y chile verde)", a: ["PESCADO"], tags: ["NO_VEGANO", "NO_VEGETARIANO", "PICANTE"], mod: false, note: "" },
+    { n: "Decoración: cacahuete", a: ["FRUTOS CON CÁSCARA", "CACAHUETES"], tags: [], mod: true, note: "Sin cacahuete" },
+    { n: "Sésamo negro", a: ["SÉSAMO"], tags: [], mod: true, note: "Sin sésamo negro" }
+  ]},
+  { id: 35, cat: "WOK", name: "PAD THAI", traces: [], protocol: "Limpiar wok para alergias a crustáceos/cacahuete.", ings: [
+    { n: "Noodles de arroz, verduras, lima y cilantro", a: [], tags: [], mod: false, note: "" },
+    { n: "Pollo", a: [], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin pollo" },
+    { n: "Gambones", a: ["CRUSTÁCEOS", "MOLUSCOS"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin gambones" },
+    { n: "Huevo cuajado", a: ["HUEVO"], tags: ["NO_VEGANO"], mod: true, note: "Sin huevo" },
+    { n: "Salsa pad thai", a: ["PESCADO", "CACAHUETES", "FRUTOS CON CÁSCARA"], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Decoración: cacahuetes", a: ["FRUTOS CON CÁSCARA", "CACAHUETES"], tags: [], mod: true, note: "Sin cacahuetes de decoración" },
+    { n: "Brotes de soja", a: ["SOJA"], tags: [], mod: true, note: "Sin brotes de soja" }
+  ]},
+  { id: 36, cat: "WOK", name: "ARROZ SALTADO", traces: [], protocol: "Wok limpio.", ings: [
+    { n: "Arroz basmati y verduras", a: [], tags: [], mod: false, note: "" },
+    { n: "Ternera", a: [], tags: ["NO_VEGANO", "NO_VEGETARIANO"], mod: true, note: "Sin ternera (solo verduras)" },
+    { n: "Huevo", a: ["HUEVO"], tags: ["NO_VEGANO"], mod: true, note: "Sin huevo" },
+    { n: "Salsa yakiniku", baseId: "base_yakiniku", a: [], tags: [], mod: true, note: "Saltear sin salsa yakiniku" }
+  ]},
+  { id: 37, cat: "WOK", name: "TONKATSU DE PRESA IBÉRICA", traces: [], protocol: "Se puede hacer la presa en plancha limpia sin panko ni huevo.", ings: [
+    { n: "Arroz basmati, verduras y alga nori", a: [], tags: [], mod: false, note: "" },
+    { n: "Presa de cerdo ibérico", a: [], tags: ["CERDO", "NO_VEGANO", "NO_VEGETARIANO"], mod: false, note: "" },
+    { n: "Empanado panko y huevo de la presa", a: ["GLUTEN", "HUEVO"], tags: ["NO_VEGANO"], mod: true, note: "Hacer presa a la plancha sin empanar" },
+    { n: "Huevo en el arroz", a: ["HUEVO"], tags: ["NO_VEGANO"], mod: true, note: "Sin huevo" },
+    { n: "Salsa soja thai", a: ["GLUTEN", "SOJA", "MOSTAZA"], tags: [], mod: true, note: "Sin salsa soja thai" },
+    { n: "Salsa tonkatsu", baseId: "base_tonkatsu", a: [], tags: [], mod: true, note: "Sin salsa tonkatsu" }
+  ]},
+  // POSTRES
+  { id: 38, cat: "POSTRES", name: "MOCHI CHOCOLATE", traces: [], protocol: "", ings: [
+    { n: "Mochi de chocolate", a: ["SOJA", "LÁCTEO"], tags: ["NO_VEGANO"], mod: false, note: "" }
+  ]},
+  { id: 39, cat: "POSTRES", name: "MOCHI QUESO", traces: [], protocol: "", ings: [
+    { n: "Mochi de queso y galleta", a: ["GLUTEN", "LÁCTEO", "SOJA", "FRUTOS CON CÁSCARA", "CACAHUETES", "SÉSAMO", "HUEVO"], tags: ["NO_VEGANO"], mod: false, note: "" }
+  ]},
+  { id: 40, cat: "POSTRES", name: "TARTA DE QUESO LIMA", traces: [], protocol: "", ings: [
+    { n: "Crema de lima", a: ["HUEVO", "LÁCTEO"], tags: ["NO_VEGANO"], mod: false, note: "" },
+    { n: "Base galleta", a: ["GLUTEN", "SULFITOS", "SOJA", "LÁCTEO", "FRUTOS CON CÁSCARA", "CACAHUETES"], tags: ["NO_VEGANO"], mod: false, note: "" },
+    { n: "Helado chocolate blanco y lima", a: ["LÁCTEO", "SOJA"], tags: ["NO_VEGANO"], mod: true, note: "Servir sin helado" }
+  ]},
+  { id: 41, cat: "POSTRES", name: "LOCURA DE CHOCOLATE", traces: [], protocol: "", ings: [
+    { n: "Bizcocho y Nutella", a: ["GLUTEN", "HUEVO", "LÁCTEO", "SOJA", "FRUTOS CON CÁSCARA", "CACAHUETES"], tags: ["NO_VEGANO"], mod: false, note: "" },
+    { n: "Kínder bueno", a: ["GLUTEN", "LÁCTEO", "SOJA", "FRUTOS CON CÁSCARA", "CACAHUETES"], tags: ["NO_VEGANO"], mod: true, note: "Sin Kinder Bueno" },
+    { n: "Petazeta chocolate", a: ["LÁCTEO", "SOJA"], tags: ["NO_VEGANO"], mod: true, note: "Sin petazetas" },
+    { n: "Helado choco avellana", a: ["GLUTEN", "LÁCTEO", "HUEVO", "SOJA", "FRUTOS CON CÁSCARA"], tags: ["NO_VEGANO"], mod: true, note: "Sin helado" }
+  ]},
+  { id: 42, cat: "POSTRES", name: "CREMOSO DE LA PASIÓN", traces: [], protocol: "", ings: [
+    { n: "Espuma maracuyá y mango liofilizado", a: ["LÁCTEO", "SOJA"], tags: ["NO_VEGANO"], mod: false, note: "" },
+    { n: "Galleta y mantequilla", a: ["GLUTEN", "LÁCTEO"], tags: ["NO_VEGANO"], mod: true, note: "Servir sin base de galleta" },
+    { n: "Helado mango", a: ["GLUTEN", "LÁCTEO", "SOJA", "HUEVO", "FRUTOS CON CÁSCARA", "CACAHUETES"], tags: ["NO_VEGANO"], mod: true, note: "Sin helado de mango" }
+  ]},
+  { id: 43, cat: "POSTRES", name: "COULANT DE PISTACHO Y CHOCOLATE BLANCO", traces: [], protocol: "", ings: [
+    { n: "Coulant de pistacho", a: ["GLUTEN", "HUEVO", "FRUTOS CON CÁSCARA", "CACAHUETES", "LÁCTEO", "SOJA", "MOSTAZA", "SULFITOS"], tags: ["NO_VEGANO"], mod: false, note: "" },
+    { n: "Garrapiñado de pistacho", a: ["GLUTEN", "FRUTOS CON CÁSCARA", "CACAHUETES", "LÁCTEO", "SOJA", "MOSTAZA", "SULFITOS"], tags: ["NO_VEGANO"], mod: true, note: "Sin garrapiñado de pistacho" },
+    { n: "Helado pistacho", a: ["FRUTOS CON CÁSCARA", "CACAHUETES", "HUEVO", "LÁCTEO", "SOJA", "SÉSAMO"], tags: ["NO_VEGANO"], mod: true, note: "Sin helado de pistacho" }
+  ]}
+];
+
+let basesData = JSON.parse(localStorage.getItem("manduka_bases_v3_2026")) || JSON.parse(JSON.stringify(INITIAL_BASES));
+let menuData = JSON.parse(localStorage.getItem("manduka_menu_v3_2026")) || JSON.parse(JSON.stringify(INITIAL_MENU));
+let staffPin = localStorage.getItem("manduka_pin") || "2026";
+
+let selectedAllergens = new Set();
+let selectedDiets = new Set();
+let currentTab = "aptos";
+let isStaffUnlocked = false;
+let currentModalTraces = new Set();
+
+// Variables para los 5 toques secretos en el título
+let secretTapCount = 0;
+let secretTapTimer = null;
+
+function saveStorage() {
+  localStorage.setItem("manduka_bases_v3_2026", JSON.stringify(basesData));
+  localStorage.setItem("manduka_menu_v3_2026", JSON.stringify(menuData));
+}
+
+// 5 TOQUES SECRETOS EN EL TÍTULO
+function handleSecretTap() {
+  secretTapCount++;
+  clearTimeout(secretTapTimer);
+  if (secretTapCount >= 5) {
+    secretTapCount = 0;
+    if (isStaffUnlocked) {
+      lockStaffMode();
+    } else {
+      const pin = prompt("🔒 Modo Staff - Introduce el PIN:");
+      if (pin === staffPin) {
+        isStaffUnlocked = true;
+        document.getElementById("staffBar").classList.add("show");
+        renderDishes();
+      } else if (pin !== null) {
+        alert("PIN incorrecto");
+      }
+    }
+  } else {
+    secretTapTimer = setTimeout(() => { secretTapCount = 0; }, 1600);
+  }
+}
+
+function lockStaffMode() {
+  isStaffUnlocked = false;
+  document.getElementById("staffBar").classList.remove("show");
+  renderDishes();
+}
+
+// RESOLUCIÓN DE ALÉRGENOS Y TAGS DESDE BASE COMPARTIDA
+function resolveIngData(ing) {
+  if (ing.baseId && basesData[ing.baseId]) {
+    const b = basesData[ing.baseId];
+    return { a: b.a || [], tags: b.tags || [], baseName: b.name };
+  }
+  return { a: ing.a || [], tags: ing.tags || [], baseName: null };
+}
+
+function initFilterButtons() {
+  document.getElementById("allergenGrid").innerHTML = ALLERGENS.map(a => `
+    <div class="chip ${selectedAllergens.has(a) ? 'active' : ''}" onclick="toggleAllergen('${a}')">${a}</div>
+  `).join("");
+
+  document.getElementById("dietGrid").innerHTML = DIETS.map(d => `
+    <div class="chip diet ${selectedDiets.has(d.id) ? 'active' : ''}" onclick="toggleDiet('${d.id}')">${d.label}</div>
+  `).join("");
+}
+
+function toggleAllergen(a) {
+  if (selectedAllergens.has(a)) selectedAllergens.delete(a);
+  else selectedAllergens.add(a);
+  initFilterButtons();
+  renderDishes();
+}
+
+function toggleDiet(d) {
+  if (selectedDiets.has(d)) selectedDiets.delete(d);
+  else selectedDiets.add(d);
+  initFilterButtons();
+  renderDishes();
+}
+
+function clearAllFilters() {
+  selectedAllergens.clear();
+  selectedDiets.clear();
+  document.getElementById("searchInput").value = "";
+  document.getElementById("catFilter").value = "ALL";
+  document.getElementById("strictTraces").checked = false;
+  initFilterButtons();
+  renderDishes();
+}
+
+function setTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.getElementById("tab-" + tab).classList.add("active");
+  renderDishes();
+}
+
+function quickToggleMod(dishId, ingIndex) {
+  const dish = menuData.find(d => d.id === dishId);
+  if (!dish || !dish.ings[ingIndex]) return;
+  const ing = dish.ings[ingIndex];
+  ing.mod = !ing.mod;
+  if (ing.mod && !ing.note) {
+    const customNote = prompt(`¿Cómo se adapta "${ing.n}" en cocina?`, "Sin " + ing.n.toLowerCase());
+    ing.note = customNote || "Omitir";
+  }
+  saveStorage();
+  renderDishes();
+}
+
+function evaluateDish(dish, strictTraces) {
+  if (selectedAllergens.size === 0 && selectedDiets.size === 0) {
+    return { status: "aptos", removeList: [], blockers: [], traceWarn: [] };
+  }
+
+  let removeList = [];
+  let blockers = [];
+  let traceWarn = [];
+
+  dish.ings.forEach(ing => {
+    const resolved = resolveIngData(ing);
+    const alHits = resolved.a.filter(al => selectedAllergens.has(al));
+    const dietHits = resolved.tags.filter(t => selectedDiets.has(t)).map(t => {
+      const found = DIETS.find(d => d.id === t);
+      return found ? found.label : t;
+    });
+    const allHits = [...alHits, ...dietHits];
+
+    if (allHits.length > 0) {
+      const actionText = ing.note ? ing.note : `Omitir ${ing.n}`;
+      if (ing.mod) removeList.push(`<b>${actionText}</b> <i>(${allHits.join(", ")})</i>`);
+      else blockers.push(`<b>${ing.n}</b> (${allHits.join(", ")})`);
+    }
+  });
+
+  const traceHits = (dish.traces || []).filter(al => selectedAllergens.has(al));
+  if (traceHits.length > 0) {
+    if (strictTraces) blockers.push(`Trazas declaradas (${traceHits.join(", ")})`);
+    else traceWarn = traceHits;
+  }
+
+  if (blockers.length > 0) return { status: "proh", removeList, blockers, traceWarn };
+  if (removeList.length > 0) return { status: "mod", removeList, blockers, traceWarn };
+  return { status: "aptos", removeList, blockers, traceWarn };
+}
+
+function renderDishes() {
+  const query = document.getElementById("searchInput").value.toLowerCase();
+  const catFilter = document.getElementById("catFilter").value;
+  const strictTraces = document.getElementById("strictTraces").checked;
+  const counts = { aptos: 0, mod: 0, proh: 0 };
+  const listEl = document.getElementById("dishList");
+  let html = "";
+
+  menuData.forEach(dish => {
+    if (catFilter !== "ALL" && dish.cat !== catFilter) return;
+    const matchText = dish.name.toLowerCase().includes(query) || dish.cat.toLowerCase().includes(query) ||
+      dish.ings.some(i => i.n.toLowerCase().includes(query));
+    if (!matchText) return;
+
+    const evalRes = evaluateDish(dish, strictTraces);
+    counts[evalRes.status]++;
+
+    if (evalRes.status === currentTab) {
+      let badge = "";
+      if (evalRes.status === "mod") {
+        badge = `<div class="mod-box warn">🔄 ADAPTABLE EN COCINA:<br>• ${evalRes.removeList.join("<br>• ")}</div>`;
+      } else if (evalRes.status === "proh") {
+        badge = `<div class="mod-box danger">⛔ NO APTO (Contiene en base fija):<br>• ${evalRes.blockers.join("<br>• ")}</div>`;
+      }
+      if (evalRes.traceWarn.length > 0 && evalRes.status !== "proh") {
+        badge += `<div class="mod-box trace">ℹ️ Aviso: Contiene trazas de ${evalRes.traceWarn.join(", ")}</div>`;
+      }
+      if (dish.protocol && dish.protocol.trim() !== "") {
+        badge += `<div class="mod-box protocol">👩‍🍳 <b>Protocolo:</b> ${dish.protocol}</div>`;
+      }
+
+      const pillsHtml = dish.ings.map((ing, idx) => {
+        const resolved = resolveIngData(ing);
+        const alText = resolved.a.length ? `<span class="al-tag">[${resolved.a.join(", ")}]</span>` : "";
+        const baseBadge = resolved.baseName ? `<span class="base-badge">🔗 ${resolved.baseName}</span>` : "";
+        const staffBtn = isStaffUnlocked
+          ? `<span class="staff-quick-toggle ${ing.mod ? 'mod-on' : 'mod-off'}" onclick="quickToggleMod(${dish.id}, ${idx})">${ing.mod ? '🔄 Adaptable' : '🔒 Fijo'}</span>`
+          : (ing.mod ? `<span style="color:#fcd34d; font-size:0.66rem;">(Adaptable)</span>` : "");
+        return `<div class="ing-pill ${ing.mod ? 'is-mod' : ''}">${ing.n} ${baseBadge} ${alText} ${staffBtn}</div>`;
+      }).join("");
+
+      const editDishBtn = isStaffUnlocked
+        ? `<button class="btn btn-outline" style="padding:4px 8px; font-size:0.7rem;" onclick="openDishModal(${dish.id})">✏️ Editar</button>`
+        : "";
+
+      html += `
+        <div class="dish-card ${evalRes.status}">
+          <div class="dish-header">
+            <h3 class="dish-name">${dish.name}</h3>
+            <div style="display:flex; gap:6px; align-items:center;">
+              ${editDishBtn}
+              <span class="dish-cat">${dish.cat}</span>
+            </div>
+          </div>
+          ${badge}
+          <div class="ing-pills">${pillsHtml}</div>
+        </div>
+      `;
+    }
+  });
+
+  document.getElementById("tab-aptos").innerText = `APTOS (${counts.aptos})`;
+  document.getElementById("tab-mod").innerText = `ADAPTABLES (${counts.mod})`;
+  document.getElementById("tab-proh").innerText = `PROHIBIDOS (${counts.proh})`;
+  listEl.innerHTML = html || `<p style="text-align:center; color:#94a3b8; margin-top:30px;">No hay platos en esta pestaña con los filtros seleccionados.</p>`;
+}
+
+// COMPARTIR POR WHATSAPP
+function shareWhatsApp() {
+  const strictTraces = document.getElementById("strictTraces").checked;
+  const activeFilters = [
+    ...Array.from(selectedAllergens),
+    ...Array.from(selectedDiets).map(d => DIETS.find(x => x.id === d)?.label || d)
+  ];
+
+  let aptosList = [];
+  let modList = [];
+
+  menuData.forEach(dish => {
+    const res = evaluateDish(dish, strictTraces);
+    if (res.status === "aptos") aptosList.push(`• ${dish.name} (${dish.cat})`);
+    if (res.status === "mod") {
+      const cleanMods = res.removeList.map(m => m.replace(/<[^>]*>/g, "")).join(" + ");
+      modList.push(`• ${dish.name}: ${cleanMods}`);
+    }
+  });
+
+  let text = `🍣 *CARTA MANDUKA 2026 - CONTROL ALÉRGENOS*\n`;
+  text += `🔍 *Filtro activo:* ${activeFilters.length ? activeFilters.join(", ") : "Ninguno (Carta completa)"}\n\n`;
+  text += `✅ *PLATOS APTOS (${aptosList.length}):*\n${aptosList.length ? aptosList.join("\n") : "Ninguno"}\n\n`;
+  text += `🔄 *PLATOS ADAPTABLES (${modList.length}):*\n${modList.length ? modList.join("\n") : "Ninguno"}`;
+
+  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  window.open(url, "_blank");
+}
+
+// MODAL GESTOR DE SALSAS Y BASES (CASCADA)
+function openBasesModal() {
+  const list = document.getElementById("basesEditorList");
+  list.innerHTML = "";
+  Object.keys(basesData).forEach(baseId => {
+    const b = basesData[baseId];
+    addBaseCard(baseId, b.name, b.a, b.tags);
+  });
+  document.getElementById("basesModal").style.display = "block";
+}
+
+function closeBasesModal() {
+  document.getElementById("basesModal").style.display = "none";
+}
+
+function addBaseCard(baseId = "base_" + Date.now(), name = "", allergens = [], tags = []) {
+  const div = document.createElement("div");
+  div.className = "ing-editor-card base-item";
+  div.setAttribute("data-id", baseId);
+
+  const alSet = new Set(allergens);
+  const tagSet = new Set(tags);
+
+  const alChips = ALLERGENS.map(a => `
+    <div class="mini-chip ${alSet.has(a) ? 'selected' : ''}" data-al="${a}" onclick="this.classList.toggle('selected')">${a}</div>
+  `).join("");
+
+  const dietChips = DIETS.map(d => `
+    <div class="mini-chip ${tagSet.has(d.id) ? 'diet-sel' : ''}" data-diet="${d.id}" onclick="this.classList.toggle('diet-sel')">${d.label}</div>
+  `).join("");
+
+  div.innerHTML = `
+    <div style="display:flex; gap:8px; margin-bottom:6px;">
+      <input type="text" class="base-name" value="${name}" placeholder="Nombre de la Salsa o Base (ej. Salsa Yakiniku)" style="flex:1; padding:8px; border-radius:6px; border:1px solid #475569; background:#1e293b; color:#fff; font-weight:700;">
+    </div>
+    <div style="font-size:0.7rem; color:#94a3b8;">Alérgenos de esta salsa/base:</div>
+    <div class="mini-chips base-al">${alChips}</div>
+    <div style="font-size:0.7rem; color:#94a3b8; margin-top:6px;">Restricciones dietéticas:</div>
+    <div class="mini-chips base-diet">${dietChips}</div>
+  `;
+  document.getElementById("basesEditorList").appendChild(div);
+}
+
+function saveBasesFromModal() {
+  const cards = document.querySelectorAll("#basesEditorList .base-item");
+  const newBases = {};
+  cards.forEach(c => {
+    const id = c.getAttribute("data-id");
+    const name = c.querySelector(".base-name").value.trim();
+    if (!name) return;
+    const a = Array.from(c.querySelectorAll(".base-al .mini-chip.selected")).map(el => el.getAttribute("data-al"));
+    const tags = Array.from(c.querySelectorAll(".base-diet .mini-chip.diet-sel")).map(el => el.getAttribute("data-diet"));
+    newBases[id] = { name, a, tags };
+  });
+  basesData = newBases;
+  saveStorage();
+  closeBasesModal();
+  renderDishes();
+  alert("✅ Salsas y bases actualizadas en cascada en toda la carta.");
+}
+
+// MODAL EDITOR DE PLATO
+function openDishModal(dishId = null) {
+  const modal = document.getElementById("dishModal");
+  const container = document.getElementById("ingredientsEditor");
+  container.innerHTML = "";
+  currentModalTraces.clear();
+
+  if (dishId) {
+    const dish = menuData.find(d => d.id === dishId);
+    if (!dish) return;
+    document.getElementById("modalTitle").innerText = "✏️ Editar: " + dish.name;
+    document.getElementById("editId").value = dish.id;
+    document.getElementById("editName").value = dish.name;
+    document.getElementById("editCat").value = dish.cat;
+    document.getElementById("editProtocol").value = dish.protocol || "";
+    document.getElementById("deleteDishBtn").style.display = "inline-flex";
+    (dish.traces || []).forEach(t => currentModalTraces.add(t));
+    dish.ings.forEach(ing => addIngredientCard(ing.n, ing.a || [], ing.tags || [], ing.mod, ing.note || "", ing.baseId || ""));
+  } else {
+    document.getElementById("modalTitle").innerText = "➕ Nuevo Plato o Sugerencia";
+    document.getElementById("editId").value = "";
+    document.getElementById("editName").value = "";
+    document.getElementById("editCat").value = "SUGERENCIAS";
+    document.getElementById("editProtocol").value = "";
+    document.getElementById("deleteDishBtn").style.display = "none";
+    addIngredientCard();
+  }
+
+  renderModalTraces();
+  modal.style.display = "block";
+}
+
+function closeDishModal() {
+  document.getElementById("dishModal").style.display = "none";
+}
+
+function renderModalTraces() {
+  document.getElementById("editTracesChips").innerHTML = ALLERGENS.map(a => `
+    <div class="mini-chip ${currentModalTraces.has(a) ? 'trace-sel' : ''}" onclick="toggleModalTrace('${a}')">${a}</div>
+  `).join("");
+}
+
+function toggleModalTrace(a) {
+  if (currentModalTraces.has(a)) currentModalTraces.delete(a);
+  else currentModalTraces.add(a);
+  renderModalTraces();
+}
+
+function addIngredientCard(name = "", allergens = [], tags = [], mod = true, note = "", baseId = "") {
+  const card = document.createElement("div");
+  card.className = "ing-editor-card";
+  const selectedSet = new Set(allergens);
+  const tagSet = new Set(tags);
+
+  const baseOptions = `<option value="">-- Ingrediente independiente (Personalizado) --</option>` +
+    Object.keys(basesData).map(k => `<option value="${k}" ${baseId === k ? 'selected' : ''}>🔗 Vincular a: ${basesData[k].name}</option>`).join("");
+
+  const chipsHtml = ALLERGENS.map(a => `
+    <div class="mini-chip ${selectedSet.has(a) ? 'selected' : ''}" data-al="${a}" onclick="this.classList.toggle('selected')">${a}</div>
+  `).join("");
+
+  const dietChipsHtml = DIETS.map(d => `
+    <div class="mini-chip ${tagSet.has(d.id) ? 'diet-sel' : ''}" data-diet="${d.id}" onclick="this.classList.toggle('diet-sel')">${d.label}</div>
+  `).join("");
+
+  card.innerHTML = `
+    <div style="display:flex; gap:8px; margin-bottom:6px;">
+      <input type="text" class="ing-name" placeholder="Nombre del ingrediente" value="${name}" style="flex:1; padding:8px; border-radius:6px; border:1px solid #475569; background:#1e293b; color:#fff; font-weight:700;">
+      <button class="btn btn-danger" onclick="this.parentElement.parentElement.remove()">✕</button>
+    </div>
+    <div style="margin-bottom:6px;">
+      <select class="ing-base" onchange="this.parentElement.parentElement.querySelector('.custom-al-zone').style.display = this.value ? 'none' : 'block'" style="width:100%; padding:6px; border-radius:6px; background:#1e293b; color:#93c5fd; border:1px solid #3b82f6; font-size:0.78rem;">
+        ${baseOptions}
+      </select>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:6px;">
+      <label style="font-size:0.78rem; color:#fcd34d; display:flex; align-items:center; gap:5px; cursor:pointer; font-weight:700;">
+        <input type="checkbox" class="ing-mod" ${mod ? "checked" : ""}>
+        🔄 Es adaptable
+      </label>
+      <input type="text" class="ing-note" placeholder="Indicación cocina (ej. Sin salsa / Hacer sin tempurizar)" value="${note}" style="flex:1; min-width:170px; padding:6px 8px; border-radius:6px; border:1px solid #475569; background:#1e293b; color:#fff; font-size:0.76rem;">
+    </div>
+    <div class="custom-al-zone" style="display:${baseId ? 'none' : 'block'};">
+      <div style="font-size:0.68rem; color:#94a3b8;">Alérgenos directos:</div>
+      <div class="mini-chips ing-allergens">${chipsHtml}</div>
+      <div style="font-size:0.68rem; color:#94a3b8; margin-top:5px;">Filtros dietéticos que bloquea:</div>
+      <div class="mini-chips ing-diets">${dietChipsHtml}</div>
+    </div>
+  `;
+  document.getElementById("ingredientsEditor").appendChild(card);
+}
+
+function saveDishFromModal() {
+  const id = document.getElementById("editId").value;
+  const name = document.getElementById("editName").value.trim().toUpperCase();
+  const cat = document.getElementById("editCat").value;
+  const protocol = document.getElementById("editProtocol").value.trim();
+  if (!name) { alert("Indica el nombre del plato"); return; }
+
+  const traces = Array.from(currentModalTraces);
+  const cards = document.querySelectorAll("#ingredientsEditor .ing-editor-card");
+  const ings = [];
+
+  cards.forEach(c => {
+    const n = c.querySelector(".ing-name").value.trim();
+    if (!n) return;
+    const baseId = c.querySelector(".ing-base").value;
+    const mod = c.querySelector(".ing-mod").checked;
+    const note = c.querySelector(".ing-note").value.trim();
+    const a = Array.from(c.querySelectorAll(".ing-allergens .mini-chip.selected")).map(el => el.getAttribute("data-al"));
+    const tags = Array.from(c.querySelectorAll(".ing-diets .mini-chip.diet-sel")).map(el => el.getAttribute("data-diet"));
+    ings.push({ n, baseId: baseId || undefined, a, tags, mod, note });
+  });
+
+  if (id) {
+    const idx = menuData.findIndex(d => d.id == id);
+    if (idx > -1) menuData[idx] = { id: Number(id), cat, name, protocol, traces, ings };
+  } else {
+    menuData.unshift({ id: Date.now(), cat, name, protocol, traces, ings });
+  }
+
+  saveStorage();
+  closeDishModal();
+  renderDishes();
+}
+
+function deleteCurrentDish() {
+  const id = document.getElementById("editId").value;
+  if (!id || !confirm("¿Eliminar este plato?")) return;
+  menuData = menuData.filter(d => d.id != id);
+  saveStorage();
+  closeDishModal();
+  renderDishes();
+}
+
+function changePin() {
+  const newPin = prompt("Nuevo PIN para desbloquear con los 5 toques:", staffPin);
+  if (newPin && newPin.trim()) {
+    staffPin = newPin.trim();
+    localStorage.setItem("manduka_pin", staffPin);
+    alert("PIN actualizado a: " + staffPin);
+  }
+}
+
+function exportData() {
+  const payload = JSON.stringify({ bases: basesData, menu: menuData });
+  navigator.clipboard.writeText(payload).then(() => {
+    alert("✅ Carta y bases copiadas al portapapeles. Pégala en el WhatsApp del equipo.");
+  });
+}
+
+function importData() {
+  const raw = prompt("Pega aquí los datos copiados:");
+  if (!raw) return;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed.menu && parsed.bases) {
+      basesData = parsed.bases;
+      menuData = parsed.menu;
+      saveStorage();
+      renderDishes();
+      alert("✅ Carta y bases actualizadas.");
+    }
+  } catch (e) {
+    alert("Código no válido.");
+  }
+}
+
+function resetDefault() {
+  if (confirm("¿Restaurar los 43 platos y las bases de fábrica?")) {
+    basesData = JSON.parse(JSON.stringify(INITIAL_BASES));
+    menuData = JSON.parse(JSON.stringify(INITIAL_MENU));
+    saveStorage();
+    renderDishes();
+  }
+}
+
+initFilterButtons();
+renderDishes();
+</script>
+</body>
+</html>
